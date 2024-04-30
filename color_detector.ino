@@ -15,15 +15,15 @@
     Copyright (c) 2024 Um Robô por Aluno. Todos os direitos reservados.
 */
 
-#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h>	//	Bibilioteca para usar o NeoPixel
 
 //  Declarando pinos
+#define NUMLEDS 1
 #define PINNP 3
 #define PINLDR A0
 
-
-//  Iniciando NeoPixel
-Adafruit_NeoPixel led = Adafruit_NeoPixel(1, PINNP, NEO_RGB + NEO_KHZ800);
+//  Iniciando NeoPixel 
+Adafruit_NeoPixel led = Adafruit_NeoPixel(NUMLEDS, PINNP, NEO_GRB + NEO_KHZ800);	//	Troquei o RGB por GRB, pois, queria que a cor Vermelha viesse primeiro
 
 //  Declarando variáveis
 int leitura   = 0;
@@ -32,63 +32,70 @@ int minG      = 2000, maxG = 0;
 int minB      = 2000, maxB = 0;
 
 void setup() {
-  //  Preparando sensores
+  //	Preparando sensores
   led.begin();
-  led.show(); //  Inicia o NeoPixel e apaga qualquer cor exibida anteriormente
-  Serial.begin(9600); //  Inicializa a comunicação serial para depuração
+  led.show(); 
+  Serial.begin(9600); 
 
-  calibrarCores();  //  Chama a função para calibrar as cores no início 
+  //	Calibrando cores no início
+  calibraRed();		//  Calibra a cor Vermelha
+  calibraGreen();	//  Calibra a cor Verde
+  calibraBlue();	//  Calibra a cor Azul
 }
 
 void loop() {
-  // Iniciando leitura
-  leitura = analogRead(PINLDR); //  Realiza uma leitura do LDR
+  //	Iniciando leitura
+  leitura = analogRead(PINLDR);	//  Realiza uma leitura do LDR
 
-  Serial.println(leitura);  //  Imprime a leitura do LDR no Monitor Serial
+  Serial.println(leitura); //  Imprime a leitura do LDR no Monitor Serial
 
-  // Detectando cores
-  if (leitura <= maxR && leitura >= minR) { //  Verifica se a leitura está dentro dos limites de cor vermelha
+  //	Detectando cores
+  if (leitura < maxR && leitura > minR) { //  Verifica se a leitura está dentro dos limites de cor vermelha
     Serial.println("Vermelho"); //  Se sim, imprime "Vermelho" no Monitor Serial
-  } else if (leitura <= maxG && leitura >= minG) {  //  Verifica se a leitura está dentro dos limites de cor verde
+  } else if (leitura < maxG && leitura > minG) {  //  Verifica se a leitura está dentro dos limites de cor verde
     Serial.println("Verde");  //  Se sim, imprime "Verde" no Monitor Serial
-  } else if (leitura <= maxB && leitura >= minB) {  //  Verifica se a leitura está dentro dos limites de cor azul
+  } else if (leitura < maxB && leitura > minB) {  //  Verifica se a leitura está dentro dos limites de cor azul
     Serial.println("Azul"); //  Se sim, imprime "Azul" no Monitor Serial
   }
 
   delay(500);
 }
 
-//  Função para calibrar as cores vermelho, verde e azul
-void calibrarCores() {
-  // Chama a função calibraLDR para calibrar cada cor individualmente
-  calibraLDR("Vermelho", minR, maxR);  //  Calibração da cor vermelha
-  calibraLDR("Verde", minG, maxG);     //  Calibração da cor verde
-  calibraLDR("Azul", minB, maxB);      //  Calibração da cor azul
+void calibraRed() {
+  //Calibrando Vermelho
+  led.setPixelColor(0, 255, 0, 0); //	Indicando que a cor Vermelho será calibrada
+  led.show();
+  delay(1500);
+  led.setPixelColor(0, 255, 255, 255); 
+  led.show();
+  calibraLDR(minR, maxR);
+  delay(1500);
 }
 
-//  Função para calibrar uma cor específica | calibraLDR
-void calibraLDR(const char *cor, int &minVal, int &maxVal) { //cor -> especificar a cor que será calibrada
-  int r = 0, g = 0, b = 0;
-
-  /* Determina a cor a ser exibida no NeoPixel durante a calibração
-  strcmp(): foi utilizado para comparar Strings, nesse caso a String cor com as Strings("Vermelho", "Verde" e "Azul"), 
-  pois, assim saberemos qual cor está sendo calibrada no momento e que saibamos o valor de r, g e b corretamente para a cor atual durante a calibração.
-  */
-  if (strcmp(cor, "Vermelho") == 0) {
-    r = 255;
-  } else if (strcmp(cor, "Verde") == 0) {
-    g = 255;
-  } else if (strcmp(cor, "Azul") == 0) {
-    b = 255;
-  }
-  
-  //  Configura o NeoPixel para exibir a cor específica durante a calibração
-  led.setPixelColor(0, r, g, b);
-  led.show(); //  Atualiza o NeoPixel para exibir a cor configurada
+void calibraGreen() {
+  //Calibrando Verde
+  led.setPixelColor(0, 0, 255, 0); //	Indicando que a cor Verde será calibrada
+  led.show();
   delay(1500);
-  led.setPixelColor(0, 255, 255, 255); // NeoPixel
-  led.show(); //  Atualiza o NeoPixel para apagar qualquer cor exibida anteriormente
-  
+  led.setPixelColor(0, 255, 255, 255); 
+  led.show();
+  calibraLDR(minG, maxG);
+  delay(1500);
+}
+
+void calibraBlue() {
+  //Calibrando Azul
+  led.setPixelColor(0, 0, 0, 255); //	Indicando que a cor Azul será calibrada
+  led.show();
+  delay(1500);
+  led.setPixelColor(0, 255, 255, 255); 
+  led.show();
+  calibraLDR(minB, maxB);
+  delay(1500);
+}
+
+//  Função para calibrar o LDR
+void calibraLDR(int &minVal, int &maxVal) { 
   //  Inicializa os valores mínimos e máximos com os limites máximos possíveis
   minVal = 2000;
   maxVal = 0;
